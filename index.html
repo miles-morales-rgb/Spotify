@@ -3,44 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Miles Morales Music</title>
+    <title>Miles Morales Music - Auto Fetch</title>
     <style>
-        :root { --green: #1DB954; --black: #121212; --grey: #282828; --light-grey: #b3b3b3; }
+        :root { --green: #1DB954; --black: #121212; --grey: #282828; --light-grey: #b3b3b3; --border-grey: #3e3e3e; }
         body { background: #000; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
-        /* Layout Grid */
         .app-container { display: flex; flex: 1; height: calc(100vh - 90px); }
-        
-        /* Sidebar */
         aside { width: 260px; background: #000; padding: 24px; display: flex; flex-direction: column; gap: 20px; font-weight: bold; }
         .nav-item { color: var(--light-grey); cursor: pointer; transition: 0.2s; }
         .nav-item:hover { color: white; }
 
-        /* Main Window */
-        main { flex: 1; background: linear-gradient(to bottom, #222, var(--black)); padding: 24px; overflow-y: auto; border-radius: 8px; margin-top: 8px; }
+        main { flex: 1; background: linear-gradient(to bottom, #1e1e1e, var(--black)); padding: 24px; overflow-y: auto; margin-top: 8px; border-radius: 8px; }
         
-        .search-area { margin-bottom: 30px; position: sticky; top: 0; z-index: 10; }
-        #searchBox { width: 100%; max-width: 350px; padding: 12px 20px; border-radius: 20px; border: none; outline: none; font-size: 14px; }
+        #searchBox { width: 100%; max-width: 350px; padding: 12px 20px; border-radius: 20px; border: none; background: #242424; color: white; margin-bottom: 20px; }
 
-        /* Song Cards */
-        .song-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 24px; }
-        .card { background: #181818; padding: 16px; border-radius: 8px; cursor: pointer; transition: background 0.3s ease; position: relative; }
-        .card:hover { background: #282828; }
-        .card img { width: 100%; aspect-ratio: 1; border-radius: 4px; margin-bottom: 15px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
-        .card-title { font-weight: bold; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .card-artist { color: var(--light-grey); font-size: 14px; }
+        /* LIST VIEW STYLING */
+        .song-list-header { display: grid; grid-template-columns: 50px 1fr 1fr; padding: 10px 16px; color: var(--light-grey); border-bottom: 1px solid var(--border-grey); font-size: 14px; text-transform: uppercase; }
+        
+        .song-row { 
+            display: grid; 
+            grid-template-columns: 50px 1fr 1fr; 
+            padding: 10px 16px; 
+            align-items: center; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            transition: background 0.2s;
+        }
+        .song-row:hover { background: rgba(255,255,255,0.1); }
+        .song-row.active { color: var(--green); }
+        .song-index { color: var(--light-grey); }
+        .song-title { font-weight: 500; }
+        .song-repo { color: var(--light-grey); font-size: 14px; }
 
         /* Player Bar */
-        footer { height: 90px; background: #000; border-top: 1px solid #282828; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
-        
-        .current-track { width: 30%; display: flex; align-items: center; gap: 15px; }
+        footer { height: 90px; background: #000; border-top: 1px solid #282828; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 100; }
+        .current-track { width: 30%; }
         .player-controls { width: 40%; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-        
-        .btn-play { background: white; border: none; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; }
-        .btn-play:hover { transform: scale(1.05); }
-
+        .btn-play { background: white; border: none; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; font-size: 16px; }
         .progress-box { width: 100%; display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--light-grey); }
-        input[type="range"] { flex: 1; accent-color: var(--green); height: 4px; cursor: pointer; }
+        input[type="range"] { flex: 1; accent-color: var(--green); cursor: pointer; }
     </style>
 </head>
 <body>
@@ -50,23 +51,28 @@
         <div style="font-size: 24px; color: white; margin-bottom: 10px;">Spotify®</div>
         <div class="nav-item">🏠 Home</div>
         <div class="nav-item">🔍 Search</div>
-        <div class="nav-item">📚 Your Library</div>
     </aside>
 
     <main>
-        <div class="search-area">
-            <input type="text" id="searchBox" placeholder="Search for your music..." onkeyup="filterSongs()">
+        <input type="text" id="searchBox" placeholder="Search in your GitHub Library..." onkeyup="filterSongs()">
+        <h2 id="repo-status">Your GitHub Tracks</h2>
+        
+        <div class="song-list-header">
+            <div>#</div>
+            <div>Title</div>
+            <div>Source</div>
         </div>
-        <h2 style="margin-bottom: 20px;">Your Tracks</h2>
-        <div class="song-grid" id="grid"></div>
+        <div id="list-container">
+            <p style="padding: 20px; color: var(--light-grey);">Connecting to GitHub...</p>
+        </div>
     </main>
 </div>
 
 <footer>
     <div class="current-track">
         <div id="trackName" style="font-weight: bold;">No song selected</div>
+        <div id="trackArtist" style="font-size: 12px; color: var(--light-grey);">GitHub Repository</div>
     </div>
-
     <div class="player-controls">
         <button class="btn-play" id="playBtn" onclick="togglePlay()">▶</button>
         <div class="progress-box">
@@ -75,55 +81,50 @@
             <span id="duration">0:00</span>
         </div>
     </div>
-
     <div style="width: 30%; text-align: right;">
-        <span style="font-size: 12px; color: var(--light-grey);">Vol</span>
-        <input type="range" style="width: 100px;" oninput="changeVolume(this.value)">
+        <input type="range" style="width: 80px;" oninput="audio.volume = this.value/100">
     </div>
 </footer>
 
 <audio id="audio"></audio>
 
 <script>
-    // YOUR MUSIC DATA
-    const playlist = [
-        { 
-            title: "Heartbreak Feels Like", 
-            artist: "JVKE", 
-            cover: "https://i.scdn.co/image/ab67616d0000b2738a9ef9d45388046f481a5f6e", 
-            src: "https://raw.githubusercontent.com/miles-morales-rgb/Music/main/JVKE%20-%20this%20is%20what%20heartbreak%20feels%20like%20%28Official%20Lyric%20Video%29.mp3" 
-        },
-        { 
-            title: "Winter Feels Like", 
-            artist: "JVKE", 
-            cover: "https://i.scdn.co/image/ab67616d0000b273f089851610e2f97f742f896d", 
-            src: "https://raw.githubusercontent.com/miles-morales-rgb/Music/main/JVKE%20-%20this%20is%20what%20winter%20feels%20like%20%28official%20lyric%20video%29.mp3" 
-        },
-        { 
-            title: "Middle of the Night Mashup", 
-            artist: "JVKE", 
-            cover: "https://i.scdn.co/image/ab67616d0000b273f089851610e2f97f742f896d", 
-            src: "https://raw.githubusercontent.com/miles-morales-rgb/Music/main/MIDDLE%20OF%20THE%20NIGHT%20x%20TERI%20DEEWANI%20%28Gravero%20%26%20Beatzhacker%20Mashup%29%20%20Full%20Version.mp3" 
-        },
-        { 
-            title: "Ishare", 
-            artist: "JVKE", 
-            cover: "https://i.scdn.co/image/ab67616d0000b273f089851610e2f97f742f896d", 
-            src: "https://raw.githubusercontent.com/miles-morales-rgb/Music/main/Bad%20Junkie%2C%20Priyanshu%20Bhartiya%20-%20Ishare%20%5BOfficial%20Lyric%20Video%5D%20%20EP%20Afsanay.mp3" 
-        }
-    ];
-
+    const USER = "miles-morales-rgb";
+    const REPO = "Music";
+    const API_URL = `https://api.github.com/repos/${USER}/${REPO}/contents/`;
+    
+    let allTracks = []; // Will hold the fetched songs
     const audio = document.getElementById('audio');
     const playBtn = document.getElementById('playBtn');
-    const progress = document.getElementById('progress');
-    const grid = document.getElementById('grid');
+    const listContainer = document.getElementById('list-container');
 
-    function displaySongs(songs) {
-        grid.innerHTML = songs.map(s => `
-            <div class="card" onclick="loadSong('${s.src}', '${s.title}')">
-                <img src="${s.cover}">
-                <div class="card-title">${s.title}</div>
-                <div class="card-artist">${s.artist}</div>
+    // 1. FETCH MUSIC FROM GITHUB
+    async function fetchGitHubMusic() {
+        try {
+            const response = await fetch(API_URL);
+            const files = await response.json();
+            
+            // Filter for audio files and map them to our format
+            allTracks = files
+                .filter(file => file.name.match(/\.(mp3|wav|m4a)$/i))
+                .map(file => ({
+                    title: file.name.replace(/\.[^/.]+$/, "").replaceAll("%20", " "), 
+                    src: file.download_url
+                }));
+
+            renderList(allTracks);
+        } catch (error) {
+            listContainer.innerHTML = `<p style="color:red">Failed to load music. Check Repo name or privacy.</p>`;
+        }
+    }
+
+    // 2. RENDER AS LIST ROWS
+    function renderList(songs) {
+        listContainer.innerHTML = songs.map((s, index) => `
+            <div class="song-row" onclick="loadSong('${s.src}', '${s.title}')">
+                <div class="song-index">${index + 1}</div>
+                <div class="song-title">${s.title}</div>
+                <div class="song-repo">GitHub / ${REPO}</div>
             </div>
         `).join('');
     }
@@ -133,6 +134,12 @@
         audio.play();
         document.getElementById('trackName').innerText = title;
         playBtn.innerText = "⏸";
+        
+        // Visual cue for active row
+        document.querySelectorAll('.song-row').forEach(row => {
+            row.classList.remove('active');
+            if(row.innerText.includes(title)) row.classList.add('active');
+        });
     }
 
     function togglePlay() {
@@ -143,29 +150,20 @@
 
     function filterSongs() {
         const q = document.getElementById('searchBox').value.toLowerCase();
-        const filtered = playlist.filter(s => s.title.toLowerCase().includes(q));
-        displaySongs(filtered);
+        const filtered = allTracks.filter(s => s.title.toLowerCase().includes(q));
+        renderList(filtered);
     }
 
-    function changeVolume(v) { audio.volume = v / 100; }
-
-    function formatTime(sec) {
-        let min = Math.floor(sec / 60);
-        let s = Math.floor(sec % 60);
-        return `${min}:${s < 10 ? '0'+s : s}`;
-    }
-
+    // Audio progress logic
     audio.ontimeupdate = () => {
         progress.max = audio.duration || 0;
         progress.value = audio.currentTime;
-        document.getElementById('currentTime').innerText = formatTime(audio.currentTime);
-        document.getElementById('duration').innerText = audio.duration ? formatTime(audio.duration) : "0:00";
+        document.getElementById('currentTime').innerText = Math.floor(audio.currentTime/60) + ":" + String(Math.floor(audio.currentTime%60)).padStart(2,'0');
+        document.getElementById('duration').innerText = audio.duration ? Math.floor(audio.duration/60) + ":" + String(Math.floor(audio.duration%60)).padStart(2,'0') : "0:00";
     };
 
-    progress.oninput = () => { audio.currentTime = progress.value; };
-
-    // Initial Load
-    displaySongs(playlist);
+    // Initial Fetch
+    fetchGitHubMusic();
 </script>
 </body>
 </html>
